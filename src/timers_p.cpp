@@ -300,7 +300,7 @@ int EventDispatcherEPollPrivate::remainingTime(int timerId) const
 void EventDispatcherEPollPrivate::timer_callback(EventDispatcherEPollPrivate::TimerInfo* info)
 {
 	QTimerEvent event(info->timerId);
-	QCoreApplication::postEvent(info->object, &event);
+	QCoreApplication::sendEvent(info->object, &event);
 }
 
 void EventDispatcherEPollPrivate::disableTimers(bool disable)

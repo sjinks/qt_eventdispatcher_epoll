@@ -13,7 +13,7 @@ EventDispatcherEPollPrivate::EventDispatcherEPollPrivate(EventDispatcherEPoll* c
 	  m_interrupt(false), m_wakeups(),
 	  m_notifiers(), m_timers()
 {
-	this->m_epoll_fd = epoll_create1(FD_CLOEXEC);
+	this->m_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
 	if (-1 == this->m_epoll_fd) {
 		qErrnoWarning("epoll_create1() failed");
 		abort();
