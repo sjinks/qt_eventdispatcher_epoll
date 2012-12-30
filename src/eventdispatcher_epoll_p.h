@@ -89,8 +89,6 @@ private:
 
 	void disableSocketNotifiers(bool disable);
 	void disableTimers(bool disable);
-	void killTimers(void);
-	void killSocketNotifiers(void);
 };
 
 #endif // EVENTDISPATCHER_EPOLL_P_H

@@ -38,8 +38,12 @@ EventDispatcherEPollPrivate::~EventDispatcherEPollPrivate(void)
 {
 	close(this->m_event_fd);
 	close(this->m_epoll_fd);
-	this->killSocketNotifiers();
-	this->killTimers();
+
+	HandleHash::Iterator it = this->m_handles.begin();
+	while (it != this->m_handles.end()) {
+		delete it.value();
+		++it;
+	}
 }
 
 bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags flags)

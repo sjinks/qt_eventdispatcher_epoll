@@ -164,29 +164,9 @@ void EventDispatcherEPollPrivate::disableSocketNotifiers(bool disable)
 		e.data.fd = fd;
 		int res = epoll_ctl(this->m_epoll_fd, EPOLL_CTL_MOD, fd, &e);
 		if (Q_UNLIKELY(res != 0)) {
-			qErrnoWarning("%s: epoll_ctl() failed %d %d", Q_FUNC_INFO, disable, e.events);
+			qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
 		}
 
 		++it;
-	}
-}
-
-void EventDispatcherEPollPrivate::killSocketNotifiers(void)
-{
-	SocketNotifierHash::Iterator it = this->m_notifiers.begin();
-	while (it != this->m_notifiers.end()) {
-		HandleData* data = it.value();
-
-		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htSocketNotifier);
-		if (data->type == EventDispatcherEPollPrivate::htSocketNotifier) {
-			int fd = static_cast<int>(it.key()->socket());
-
-			delete data;
-			it = this->m_notifiers.erase(it);
-			this->m_handles.remove(fd);
-		}
-		else {
-			Q_UNREACHABLE();
-		}
 	}
 }

@@ -415,26 +415,3 @@ void EventDispatcherEPollPrivate::disableTimers(bool disable)
 		}
 	}
 }
-
-void EventDispatcherEPollPrivate::killTimers(void)
-{
-	if (!this->m_timers.isEmpty()) {
-		TimerHash::Iterator it = this->m_timers.begin();
-		while (it != this->m_timers.end()) {
-			HandleData* data = it.value();
-
-			Q_ASSERT(data->type == EventDispatcherEPollPrivate::htTimer);
-			if (data->type == EventDispatcherEPollPrivate::htTimer) {
-				int fd = data->ti.fd;
-				close(fd);
-				delete data;
-
-				it = this->m_timers.erase(it);
-				this->m_handles.remove(fd);
-			}
-			else {
-				Q_UNREACHABLE();
-			}
-		}
-	}
-}
