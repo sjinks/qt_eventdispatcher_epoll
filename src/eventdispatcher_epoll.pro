@@ -2,7 +2,7 @@ QT       -= gui
 TARGET    = eventdispatcher_epoll
 TEMPLATE  = lib
 DESTDIR   = ../lib
-CONFIG   += staticlib create_prl release
+CONFIG   += staticlib create_prl debug
 HEADERS  += eventdispatcher_epoll.h eventdispatcher_epoll_p.h
 SOURCES  += eventdispatcher_epoll.cpp eventdispatcher_epoll_p.cpp timers_p.cpp socknot_p.cpp eventdispatcher_epoll_p.cpp
 
