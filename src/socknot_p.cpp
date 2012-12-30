@@ -59,6 +59,7 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 					Q_UNREACHABLE();
 			}
 
+			Q_ASSERT(n != 0);
 			if (Q_UNLIKELY(*n != 0)) {
 				qWarning("%s: cannot add two socket notifiers of the same type for the same descriptor", Q_FUNC_INFO);
 				return;
