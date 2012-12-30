@@ -2,6 +2,7 @@
 #include <QtCore/QEvent>
 #include <QtCore/QSocketNotifier>
 #include <sys/epoll.h>
+#include <errno.h>
 #include "eventdispatcher_epoll_p.h"
 
 static inline int sn2et(QSocketNotifier::Type t)
@@ -126,6 +127,10 @@ void EventDispatcherEPollPrivate::unregisterSocketNotifier(QSocketNotifier* noti
 		}
 		else {
 			res = epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, fd, &e);
+			if (res != 0 && EBADF == errno) {
+				res = 0;
+			}
+
 			this->m_handles.erase(hi);
 			delete info;
 		}
