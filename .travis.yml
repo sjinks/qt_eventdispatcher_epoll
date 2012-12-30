@@ -1,0 +1,8 @@
+install:
+  - sudo apt-get update
+  - sudo apt-get install libqt4-dev
+
+script:
+  - cd src
+  - qmake
+  - make
