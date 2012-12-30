@@ -6,6 +6,7 @@
 #include <errno.h>
 #include "eventdispatcher_epoll.h"
 #include "eventdispatcher_epoll_p.h"
+#include "qt4compat.h"
 
 EventDispatcherEPollPrivate::EventDispatcherEPollPrivate(EventDispatcherEPoll* const q)
 	: q_ptr(q),
@@ -79,11 +80,8 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 			struct epoll_event& e = events[i];
 			int fd                = e.data.fd;
 			if (fd == this->m_event_fd) {
-				if (e.events & EPOLLIN) {
+				if (Q_LIKELY(e.events & EPOLLIN)) {
 					this->wake_up_handler();
-				}
-				else {
-					qDebug("unexpected e.events: %d", e.events);
 				}
 			}
 			else {
@@ -135,11 +133,11 @@ void EventDispatcherEPollPrivate::wake_up_handler(void)
 		res = eventfd_read(this->m_event_fd, &value);
 	} while (-1 == res && EINTR == errno);
 
-	if (-1 == res) {
+	if (Q_UNLIKELY(-1 == res)) {
 		qErrnoWarning("%s: eventfd_read() failed", Q_FUNC_INFO);
 	}
 
-	if (!this->m_wakeups.testAndSetRelease(1, 0)) {
+	if (Q_UNLIKELY(!this->m_wakeups.testAndSetRelease(1, 0))) {
 		qCritical("%s: internal error, testAndSetRelease(1, 0) failed!", Q_FUNC_INFO);
 	}
 }
@@ -154,7 +152,7 @@ void EventDispatcherEPollPrivate::wakeup(void)
 			res = eventfd_write(this->m_event_fd, value);
 		} while (-1 == res && EINTR == errno);
 
-		if (-1 == res) {
+		if (Q_UNLIKELY(-1 == res)) {
 			qErrnoWarning("%s: eventfd_write() failed", Q_FUNC_INFO);
 		}
 	}

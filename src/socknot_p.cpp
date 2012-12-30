@@ -4,17 +4,7 @@
 #include <sys/epoll.h>
 #include <errno.h>
 #include "eventdispatcher_epoll_p.h"
-
-static inline int sn2et(QSocketNotifier::Type t)
-{
-	switch (t) {
-		case QSocketNotifier::Read:      return EPOLLIN;
-		case QSocketNotifier::Write:     return EPOLLOUT;
-		case QSocketNotifier::Exception: return EPOLLPRI;
-		default:
-			Q_UNREACHABLE();
-	}
-}
+#include "qt4compat.h"
 
 void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifier)
 {
@@ -48,7 +38,7 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 		*n               = notifier;
 
 		int res = epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, fd, &e);
-		if (res != 0) {
+		if (Q_UNLIKELY(res != 0)) {
 			qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
 		}
 
@@ -56,6 +46,8 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 	}
 	else {
 		data = it.value();
+
+		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htSocketNotifier);
 		if (data->type == EventDispatcherEPollPrivate::htSocketNotifier) {
 			switch (notifier->type()) {
 				case QSocketNotifier::Read:      events = EPOLLIN;  n = &data->sni.r; break;
@@ -75,7 +67,7 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 			*n                = notifier;
 
 			int res = epoll_ctl(this->m_epoll_fd, EPOLL_CTL_MOD, fd, &e);
-			if (res != 0) {
+			if (Q_UNLIKELY(res != 0)) {
 				qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
 			}
 		}
@@ -135,7 +127,7 @@ void EventDispatcherEPollPrivate::unregisterSocketNotifier(QSocketNotifier* noti
 			delete info;
 		}
 
-		if (res != 0) {
+		if (Q_UNLIKELY(res != 0)) {
 			qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
 		}
 	}
@@ -171,7 +163,7 @@ void EventDispatcherEPollPrivate::disableSocketNotifiers(bool disable)
 		e.events  = disable ? 0 : info->sni.events;
 		e.data.fd = fd;
 		int res = epoll_ctl(this->m_epoll_fd, EPOLL_CTL_MOD, fd, &e);
-		if (res != 0) {
+		if (Q_UNLIKELY(res != 0)) {
 			qErrnoWarning("%s: epoll_ctl() failed %d %d", Q_FUNC_INFO, disable, e.events);
 		}
 
@@ -184,6 +176,8 @@ void EventDispatcherEPollPrivate::killSocketNotifiers(void)
 	SocketNotifierHash::Iterator it = this->m_notifiers.begin();
 	while (it != this->m_notifiers.end()) {
 		HandleData* data = it.value();
+
+		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htSocketNotifier);
 		if (data->type == EventDispatcherEPollPrivate::htSocketNotifier) {
 			int fd = static_cast<int>(it.key()->socket());
 
