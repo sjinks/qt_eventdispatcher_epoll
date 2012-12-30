@@ -170,6 +170,9 @@ void EventDispatcherEPollPrivate::calculateNextTimeout(EventDispatcherEPollPriva
 	}
 
 	timersub(&when, &now, &delta);
+	if (delta.tv_sec == 0 && delta.tv_usec == 0) {
+		delta.tv_usec = 1;
+	}
 }
 
 void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::TimerType type, QObject* object)
