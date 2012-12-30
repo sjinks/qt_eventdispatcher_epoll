@@ -217,7 +217,13 @@ void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::T
 		event.events  = EPOLLIN;
 		event.data.fd = fd;
 
-		epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, fd, &event);
+		if (-1 == epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, fd, &event)) {
+			qErrnoWarning("%s: epoll_ctl() failed");
+			delete data;
+			close(fd);
+			return;
+		}
+
 		this->m_timers.insert(timerId, data);
 		this->m_handles.insert(fd, data);
 	}

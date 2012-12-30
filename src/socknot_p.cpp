@@ -40,6 +40,8 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 		int res = epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, fd, &e);
 		if (Q_UNLIKELY(res != 0)) {
 			qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
+			delete data;
+			return;
 		}
 
 		this->m_handles.insert(fd, data);
@@ -69,6 +71,7 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 			int res = epoll_ctl(this->m_epoll_fd, EPOLL_CTL_MOD, fd, &e);
 			if (Q_UNLIKELY(res != 0)) {
 				qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
+				return;
 			}
 		}
 		else {

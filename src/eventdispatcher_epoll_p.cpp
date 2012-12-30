@@ -94,24 +94,15 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 					HandleData* data = it.value();
 					switch (data->type) {
 						case EventDispatcherEPollPrivate::htSocketNotifier:
-							if (Q_UNLIKELY(!(e.events & (EPOLLIN | EPOLLPRI | EPOLLOUT)))) {
-								qDebug("unexpected e.events: %d", e.events);
-							}
-
 							this->socket_notifier_callback(&data->sni, e.events);
 							break;
 
 						case EventDispatcherEPollPrivate::htTimer:
-							if (Q_UNLIKELY(!(e.events & EPOLLIN))) {
-								qDebug("unexpected e.events: %d", e.events);
-							}
-
-							this->timer_callback(&data->ti);
+							this->timer_callback(data);
 							break;
 
 						default:
 							Q_UNREACHABLE();
-							break;
 					}
 				}
 			}

@@ -12,7 +12,11 @@
 #endif
 
 #ifndef Q_UNREACHABLE
-#	define Q_UNREACHABLE()
+#	define Q_UNREACHABLE() Q_ASSERT(false)
+#endif
+
+#ifndef Q_ASSUME(s)
+#	define Q_ASSUME(s) if (s) {} else { Q_UNREACHABLE(); }
 #endif
 
 #endif // QT4COMPAT_H
