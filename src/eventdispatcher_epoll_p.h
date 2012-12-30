@@ -40,7 +40,10 @@ public:
 	struct HandleData;
 
 	struct SocketNotifierInfo {
-		QSocketNotifier* sn;
+		QSocketNotifier* r;
+		QSocketNotifier* w;
+		QSocketNotifier* x;
+		int events;
 	};
 
 	struct TimerInfo {
@@ -80,7 +83,7 @@ private:
 	static void calculateCoarseTimerTimeout(EventDispatcherEPollPrivate::TimerInfo* info, const struct timeval& now, struct timeval& when);
 	static void calculateNextTimeout(EventDispatcherEPollPrivate::TimerInfo* info, const struct timeval& now, struct timeval& delta);
 
-	void socket_notifier_callback(QSocketNotifier* n, int events);
+	void socket_notifier_callback(EventDispatcherEPollPrivate::SocketNotifierInfo* n, int events);
 	void timer_callback(EventDispatcherEPollPrivate::TimerInfo* info);
 	void wake_up_handler(void);
 

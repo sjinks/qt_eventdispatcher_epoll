@@ -235,10 +235,11 @@ bool EventDispatcherEPollPrivate::unregisterTimer(int timerId)
 
 			epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, fd, 0);
 			close(fd);
-			delete data;
 
 			this->m_timers.erase(it); // Hash is not rehashed
 			this->m_handles.remove(fd);
+
+			delete data;
 			return true;
 		}
 		else {

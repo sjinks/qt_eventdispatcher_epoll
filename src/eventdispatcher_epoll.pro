@@ -10,6 +10,8 @@ headers.files = eventdispatcher_epoll.h
 headers.path  = /usr/include
 target.path   = /usr/lib
 
+QMAKE_CXXFLAGS_DEBUG += -g3 -O0
+
 QMAKE_PKGCONFIG_NAME        = eventdispatcher_epoll
 QMAKE_PKGCONFIG_DESCRIPTION = "epoll()-based event dispatcher for Qt"
 QMAKE_PKGCONFIG_LIBDIR      = $$target.path

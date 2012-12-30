@@ -28,7 +28,9 @@ EventDispatcherEPollPrivate::EventDispatcherEPollPrivate(EventDispatcherEPoll* c
 	struct epoll_event e;
 	e.events  = EPOLLIN;
 	e.data.fd = this->m_event_fd;
-	epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, this->m_event_fd, &e);
+	if (-1 == epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, this->m_event_fd, &e)) {
+		qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
+	}
 }
 
 EventDispatcherEPollPrivate::~EventDispatcherEPollPrivate(void)
@@ -94,7 +96,7 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 								qDebug("unexpected e.events: %d", e.events);
 							}
 
-							this->socket_notifier_callback(data->sni.sn, e.events);
+							this->socket_notifier_callback(&data->sni, e.events);
 							break;
 
 						case EventDispatcherEPollPrivate::htTimer:
