@@ -6,3 +6,6 @@ script:
   - cd src
   - qmake
   - make
+
+notifications:
+  email: false
