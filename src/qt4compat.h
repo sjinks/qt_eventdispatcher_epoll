@@ -15,7 +15,7 @@
 #	define Q_UNREACHABLE() Q_ASSERT(false)
 #endif
 
-#ifndef Q_ASSUME(s)
+#ifndef Q_ASSUME
 #	define Q_ASSUME(s) if (s) {} else { Q_UNREACHABLE(); }
 #endif
 

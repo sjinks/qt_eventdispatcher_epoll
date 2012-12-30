@@ -347,6 +347,8 @@ int EventDispatcherEPollPrivate::remainingTime(int timerId) const
 
 void EventDispatcherEPollPrivate::timer_callback(EventDispatcherEPollPrivate::TimerInfo* info)
 {
+	Q_ASSUME(info != 0);
+
 	uint64_t value;
 	int res;
 	do {

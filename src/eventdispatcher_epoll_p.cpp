@@ -98,7 +98,7 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 							break;
 
 						case EventDispatcherEPollPrivate::htTimer:
-							this->timer_callback(data);
+							this->timer_callback(&data->ti);
 							break;
 
 						default:

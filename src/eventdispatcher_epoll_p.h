@@ -84,7 +84,7 @@ private:
 	static void calculateNextTimeout(EventDispatcherEPollPrivate::TimerInfo* info, const struct timeval& now, struct timeval& delta);
 
 	void socket_notifier_callback(EventDispatcherEPollPrivate::SocketNotifierInfo* n, int events);
-	void timer_callback(EventDispatcherEPollPrivate::HandleData* data);
+	void timer_callback(EventDispatcherEPollPrivate::TimerInfo* info);
 	void wake_up_handler(void);
 
 	void disableSocketNotifiers(bool disable);
