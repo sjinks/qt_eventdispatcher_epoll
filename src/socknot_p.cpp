@@ -69,7 +69,8 @@ void EventDispatcherEPollPrivate::disableSocketNotifiers(bool disable)
 		SocketNotifierInfo* info  = it.value();
 		int socket                = static_cast<int>(notifier->socket());
 
-		e.events = disable ? 0 : info->events;
+		e.events   = disable ? 0 : info->events;
+		e.data.ptr = info->data;
 		epoll_ctl(this->m_event_fd, EPOLL_CTL_MOD, socket, &e);
 		++it;
 	}
