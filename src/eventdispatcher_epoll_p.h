@@ -32,39 +32,37 @@ public:
 	int remainingTime(int timerId) const;
 	void wakeup(void);
 
-	enum datatype_t {
-		dtTimer,
-		dtSocketNotifier
+	enum HandleType {
+		htTimer,
+		htSocketNotifier
 	};
 
-	struct data_t;
+	struct HandleData;
 
 	struct SocketNotifierInfo {
-		data_t* data;
 		QSocketNotifier* sn;
-		int events;
 	};
 
 	struct TimerInfo {
-		data_t* data;
 		QObject* object;
 		struct timeval when;
 		int timerId;
 		int interval;
-		int timerfd;
+		int fd;
 		Qt::TimerType type;
 	};
 
-	struct data_t {
-		EventDispatcherEPollPrivate::datatype_t type;
+	struct HandleData {
+		EventDispatcherEPollPrivate::HandleType type;
 		union {
 			SocketNotifierInfo sni;
 			TimerInfo ti;
 		};
 	};
 
-	typedef QHash<QSocketNotifier*, SocketNotifierInfo*> SocketNotifierHash;
-	typedef QHash<int, TimerInfo*> TimerHash;
+	typedef QHash<int, HandleData*> HandleHash;
+	typedef QHash<int, HandleData*> TimerHash;
+	typedef QHash<QSocketNotifier*, HandleData*> SocketNotifierHash;
 
 private:
 	Q_DISABLE_COPY(EventDispatcherEPollPrivate)
@@ -75,6 +73,7 @@ private:
 	int m_event_fd;
 	bool m_interrupt;
 	QAtomicInt m_wakeups;
+	HandleHash m_handles;
 	SocketNotifierHash m_notifiers;
 	TimerHash m_timers;
 

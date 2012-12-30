@@ -11,7 +11,7 @@ EventDispatcherEPollPrivate::EventDispatcherEPollPrivate(EventDispatcherEPoll* c
 	: q_ptr(q),
 	  m_epoll_fd(-1), m_event_fd(-1),
 	  m_interrupt(false), m_wakeups(),
-	  m_notifiers(), m_timers()
+	  m_handles(), m_notifiers(), m_timers()
 {
 	this->m_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
 	if (-1 == this->m_epoll_fd) {
@@ -26,8 +26,8 @@ EventDispatcherEPollPrivate::EventDispatcherEPollPrivate(EventDispatcherEPoll* c
 	}
 
 	struct epoll_event e;
-	e.events   = EPOLLIN;
-	e.data.ptr = 0;
+	e.events  = EPOLLIN;
+	e.data.fd = this->m_event_fd;
 	epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, this->m_event_fd, &e);
 }
 
@@ -71,29 +71,44 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 		struct epoll_event events[1024];
 		do {
 			n_events = epoll_wait(this->m_epoll_fd, events, 1024, timeout);
-		} while (-1 == n_events && (errno == EINTR || errno == EAGAIN));
+		} while (-1 == n_events && errno == EINTR);
 
 		for (int i=0; i<n_events; ++i) {
 			struct epoll_event& e = events[i];
-			if (!e.data.ptr) {
+			int fd                = e.data.fd;
+			if (fd == this->m_event_fd) {
 				if (e.events & EPOLLIN) {
 					this->wake_up_handler();
 				}
+				else {
+					qDebug("unexpected e.events: %d", e.events);
+				}
 			}
 			else {
-				EventDispatcherEPollPrivate::data_t* data = reinterpret_cast<EventDispatcherEPollPrivate::data_t*>(e.data.ptr);
-				switch (data->type) {
-					case EventDispatcherEPollPrivate::dtSocketNotifier:
-						this->socket_notifier_callback(data->sni.sn, e.events);
-						break;
+				HandleHash::Iterator it = this->m_handles.find(fd);
+				if (it != this->m_handles.constEnd()) {
+					HandleData* data = it.value();
+					switch (data->type) {
+						case EventDispatcherEPollPrivate::htSocketNotifier:
+							if (Q_UNLIKELY(!(e.events & (EPOLLIN | EPOLLPRI | EPOLLOUT)))) {
+								qDebug("unexpected e.events: %d", e.events);
+							}
 
-					case EventDispatcherEPollPrivate::dtTimer:
-						this->timer_callback(&data->ti);
-						break;
+							this->socket_notifier_callback(data->sni.sn, e.events);
+							break;
 
-					default:
-						Q_ASSERT(false);
-						break;
+						case EventDispatcherEPollPrivate::htTimer:
+							if (Q_UNLIKELY(!(e.events & EPOLLIN))) {
+								qDebug("unexpected e.events: %d", e.events);
+							}
+
+							this->timer_callback(&data->ti);
+							break;
+
+						default:
+							Q_UNREACHABLE();
+							break;
+					}
 				}
 			}
 		}
@@ -116,7 +131,7 @@ void EventDispatcherEPollPrivate::wake_up_handler(void)
 	int res;
 	do {
 		res = eventfd_read(this->m_event_fd, &value);
-	} while (-1 == res && (EINTR == errno || EAGAIN == errno));
+	} while (-1 == res && EINTR == errno);
 
 	if (-1 == res) {
 		qErrnoWarning("%s: eventfd_read() failed", Q_FUNC_INFO);
@@ -135,7 +150,7 @@ void EventDispatcherEPollPrivate::wakeup(void)
 
 		do {
 			res = eventfd_write(this->m_event_fd, value);
-		} while (-1 == res && (EINTR == errno || EAGAIN == errno));
+		} while (-1 == res && EINTR == errno);
 
 		if (-1 == res) {
 			qErrnoWarning("%s: eventfd_write() failed", Q_FUNC_INFO);
