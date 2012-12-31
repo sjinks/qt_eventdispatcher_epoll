@@ -131,7 +131,7 @@ void EventDispatcherEPollPrivate::calculateNextTimeout(EventDispatcherEPollPriva
 		qlonglong tnow  = (qlonglong(now.tv_sec)        * 1000) + (now.tv_usec        / 1000);
 		qlonglong twhen = (qlonglong(info->when.tv_sec) * 1000) + (info->when.tv_usec / 1000);
 
-		if ((info->interval < 1000 && twhen - tnow > 1500) || (info->interval >= 1000 && twhen - tnow > 1.2*info->interval)) {
+		if (Q_UNLIKELY((info->interval < 1000 && twhen - tnow > 1500) || (info->interval >= 1000 && twhen - tnow > 1.2*info->interval))) {
 			info->when = now;
 		}
 	}
@@ -143,7 +143,7 @@ void EventDispatcherEPollPrivate::calculateNextTimeout(EventDispatcherEPollPriva
 
 		info->when.tv_usec = 0;
 		info->when.tv_sec += info->interval / 1000;
-		if (info->when.tv_sec <= now.tv_sec) {
+		if (Q_UNLIKELY(info->when.tv_sec <= now.tv_sec)) {
 			info->when.tv_sec = now.tv_sec + info->interval / 1000;
 		}
 
@@ -152,7 +152,7 @@ void EventDispatcherEPollPrivate::calculateNextTimeout(EventDispatcherEPollPriva
 	else if (Qt::PreciseTimer == info->type) {
 		if (info->interval) {
 			timeradd(&info->when, &tv_interval, &info->when);
-			if (timercmp(&info->when, &now, <)) {
+			if (Q_UNLIKELY(timercmp(&info->when, &now, <))) {
 				timeradd(&now, &tv_interval, &info->when);
 			}
 
@@ -164,7 +164,7 @@ void EventDispatcherEPollPrivate::calculateNextTimeout(EventDispatcherEPollPriva
 	}
 	else {
 		timeradd(&info->when, &tv_interval, &info->when);
-		if (timercmp(&info->when, &now, <)) {
+		if (Q_UNLIKELY(timercmp(&info->when, &now, <))) {
 			timeradd(&now, &tv_interval, &info->when);
 		}
 
@@ -211,14 +211,19 @@ void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::T
 
 		TIMEVAL_TO_TIMESPEC(&delta, &spec.it_value);
 
-		timerfd_settime(fd, 0, &spec, 0);
+		if (Q_UNLIKELY(-1 == timerfd_settime(fd, 0, &spec, 0))) {
+			qErrnoWarning("%s: timerfd_settime() failed", Q_FUNC_INFO);
+			delete data;
+			close(fd);
+			return;
+		}
 
 		struct epoll_event event;
 		event.events  = EPOLLIN;
 		event.data.fd = fd;
 
-		if (-1 == epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, fd, &event)) {
-			qErrnoWarning("%s: epoll_ctl() failed");
+		if (Q_UNLIKELY(-1 == epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, fd, &event))) {
+			qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
 			delete data;
 			close(fd);
 			return;
@@ -242,7 +247,10 @@ bool EventDispatcherEPollPrivate::unregisterTimer(int timerId)
 		if (data->type == EventDispatcherEPollPrivate::htTimer) {
 			int fd = data->ti.fd;
 
-			epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, fd, 0);
+			if (Q_UNLIKELY(-1 == epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, fd, 0))) {
+				qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
+			}
+
 			close(fd);
 
 			this->m_timers.erase(it); // Hash is not rehashed
@@ -270,7 +278,10 @@ bool EventDispatcherEPollPrivate::unregisterTimers(QObject* object)
 			if (object == data->ti.object) {
 				int fd = data->ti.fd;
 
-				epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, fd, 0);
+				if (Q_UNLIKELY(-1 == epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, fd, 0))) {
+					qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
+				}
+
 				close(fd);
 				delete data;
 
@@ -329,7 +340,11 @@ int EventDispatcherEPollPrivate::remainingTime(int timerId) const
 			struct timeval when;
 			struct itimerspec spec;
 
-			timerfd_gettime(data->ti.fd, &spec);
+			if (Q_UNLIKELY(-1 == timerfd_gettime(data->ti.fd, &spec))) {
+				qErrnoWarning("%s: timerfd_gettime() failed", Q_FUNC_INFO);
+				return -1;
+			}
+
 			if (spec.it_value.tv_sec == 0 && spec.it_value.tv_nsec == 0) {
 				return -1;
 			}
@@ -379,7 +394,10 @@ void EventDispatcherEPollPrivate::timer_callback(EventDispatcherEPollPrivate::Ti
 			gettimeofday(&now, 0);
 			EventDispatcherEPollPrivate::calculateNextTimeout(&data->ti, now, delta);
 			TIMEVAL_TO_TIMESPEC(&delta, &spec.it_value);
-			timerfd_settime(data->ti.fd, 0, &spec, 0);
+
+			if (-1 == timerfd_settime(data->ti.fd, 0, &spec, 0)) {
+				qErrnoWarning("%s: timerfd_settime() failed", Q_FUNC_INFO);
+			}
 		}
 		else {
 			Q_UNREACHABLE();
@@ -415,7 +433,10 @@ void EventDispatcherEPollPrivate::disableTimers(bool disable)
 				TIMEVAL_TO_TIMESPEC(&delta, &spec.it_value);
 			}
 
-			timerfd_settime(data->ti.fd, 0, &spec, 0);
+			if (Q_UNLIKELY(-1 == timerfd_settime(data->ti.fd, 0, &spec, 0))) {
+				qErrnoWarning("%s: timerfd_settime() failed", Q_FUNC_INFO);
+			}
+
 			++it;
 		}
 		else {
