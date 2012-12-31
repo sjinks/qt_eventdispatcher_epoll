@@ -180,7 +180,7 @@ void EventDispatcherEPollPrivate::calculateNextTimeout(EventDispatcherEPollPriva
 void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::TimerType type, QObject* object)
 {
 	int fd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
-	if (fd != -1) {
+	if (Q_LIKELY(fd != -1)) {
 		struct timeval now;
 		gettimeofday(&now, 0);
 
@@ -240,7 +240,7 @@ void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::T
 bool EventDispatcherEPollPrivate::unregisterTimer(int timerId)
 {
 	TimerHash::Iterator it = this->m_timers.find(timerId);
-	if (it != this->m_timers.end()) {
+	if (Q_LIKELY(it != this->m_timers.end())) {
 		HandleData* data = it.value();
 
 		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htTimer);
