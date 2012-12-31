@@ -86,7 +86,7 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 void EventDispatcherEPollPrivate::unregisterSocketNotifier(QSocketNotifier* notifier)
 {
 	SocketNotifierHash::Iterator it = this->m_notifiers.find(notifier);
-	if (it != this->m_notifiers.end()) {
+	if (Q_LIKELY(it != this->m_notifiers.end())) {
 		HandleData* info = it.value();
 		int fd           = static_cast<int>(notifier->socket());
 
@@ -123,7 +123,7 @@ void EventDispatcherEPollPrivate::unregisterSocketNotifier(QSocketNotifier* noti
 		}
 		else {
 			res = epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, fd, &e);
-			if (res != 0 && EBADF == errno) {
+			if (Q_UNLIKELY(res != 0 && EBADF == errno)) {
 				res = 0;
 			}
 
