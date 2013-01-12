@@ -2,22 +2,22 @@
 
 epoll()-based event dispatcher for Qt (for Linux only)
 
-**Features**
+## Features
 * very fast :-)
 * compatibility with Qt4 and Qt 5
 * does not use any private Qt headers
 * passes Qt 4 and Qt 5 event dispatcher, event loop, timer and socket notifier tests
 
-**Unsupported features**
+## Unsupported Features
 * undocumented `QCoreApplication::watchUnixSignal()` is not supported (GLib dispatcher does not support it either; this feature was removed from Qt 5 anyway)
 
-**Requirements**
+## Requirements
 * Linux kernel >= 2.6.27
 * glibc >= 2.9
 * Qt >= 4.8.0 (may work with an older Qt but this has not been tested)
 
 
-**Build**
+## Build
 
 ```
 cd src
@@ -28,7 +28,7 @@ make
 The above commands will generate the static library and `.prl` file in `../lib` directory.
 
 
-**Install**
+## Install
 
 After completing Build step run
 
@@ -39,7 +39,7 @@ sudo make install
 This will install `eventdispatcher_epoll.h` to `/usr/include`, `libeventdispatcher_epoll.a` and `libeventdispatcher_epoll.prl` to `/usr/lib`, `eventdispatcher_epoll.pc` to `/usr/lib/pkgconfig`.
 
 
-**Usage (Qt 4):**
+## Usage (Qt 4)
 
 Simply include the header file and instantiate the dispatcher in `main()`
 before creating the Qt application object.
@@ -73,7 +73,7 @@ LIBS    += -L/path/to/library -leventdispatcher_epoll
 ```
 
 
-**Usage (Qt 5):**
+## Usage (Qt 5)
 
 Simply include the header file and instantiate the dispatcher in `main()`
 before creating the Qt application object.
