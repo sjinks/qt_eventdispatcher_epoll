@@ -8,8 +8,8 @@
 
 void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifier)
 {
-	int events;
-	QSocketNotifier** n;
+	int events = 0;
+	QSocketNotifier** n = 0;
 	int fd = static_cast<int>(notifier->socket());
 
 	epoll_event e;
