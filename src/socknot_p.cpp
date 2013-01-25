@@ -1,5 +1,6 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QEvent>
+#include <QtCore/QPointer>
 #include <QtCore/QSocketNotifier>
 #include <sys/epoll.h>
 #include <errno.h>
@@ -137,20 +138,25 @@ void EventDispatcherEPollPrivate::unregisterSocketNotifier(QSocketNotifier* noti
 	}
 }
 
-void EventDispatcherEPollPrivate::socket_notifier_callback(SocketNotifierInfo *n, int events)
+void EventDispatcherEPollPrivate::socket_notifier_callback(SocketNotifierInfo* n, int events)
 {
+	Q_ASSERT(n != 0);
 	QEvent e(QEvent::SockAct);
 
-	if (n->r && (events & EPOLLIN)) {
-		QCoreApplication::sendEvent(n->r, &e);
+	QPointer<QSocketNotifier> r(n->r);
+	QPointer<QSocketNotifier> w(n->w);
+	QPointer<QSocketNotifier> x(n->x);
+
+	if (r && (events & EPOLLIN)) {
+		QCoreApplication::sendEvent(r, &e);
 	}
 
-	if (n->w && (events & EPOLLOUT)) {
-		QCoreApplication::sendEvent(n->w, &e);
+	if (w && (events & EPOLLOUT)) {
+		QCoreApplication::sendEvent(w, &e);
 	}
 
-	if (n->x && (events & EPOLLPRI)) {
-		QCoreApplication::sendEvent(n->x, &e);
+	if (x && (events & EPOLLPRI)) {
+		QCoreApplication::sendEvent(x, &e);
 	}
 }
 
