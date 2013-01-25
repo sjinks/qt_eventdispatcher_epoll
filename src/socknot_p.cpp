@@ -147,14 +147,13 @@ void EventDispatcherEPollPrivate::unregisterSocketNotifier(QSocketNotifier* noti
 	}
 }
 
-void EventDispatcherEPollPrivate::socket_notifier_callback(SocketNotifierInfo* n, int events)
+void EventDispatcherEPollPrivate::socket_notifier_callback(const SocketNotifierInfo& n, int events)
 {
-	Q_ASSERT(n != 0);
 	QEvent e(QEvent::SockAct);
 
-	QPointer<QSocketNotifier> r(n->r);
-	QPointer<QSocketNotifier> w(n->w);
-	QPointer<QSocketNotifier> x(n->x);
+	QPointer<QSocketNotifier> r(n.r);
+	QPointer<QSocketNotifier> w(n.w);
+	QPointer<QSocketNotifier> x(n.x);
 
 	if (r && (events & EPOLLIN)) {
 		QCoreApplication::sendEvent(r, &e);

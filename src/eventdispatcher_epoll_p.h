@@ -85,8 +85,8 @@ private:
 	static void calculateCoarseTimerTimeout(TimerInfo* info, const struct timeval& now, struct timeval& when);
 	static void calculateNextTimeout(TimerInfo* info, const struct timeval& now, struct timeval& delta);
 
-	void socket_notifier_callback(SocketNotifierInfo* n, int events);
-	void timer_callback(TimerInfo* info);
+	void socket_notifier_callback(const SocketNotifierInfo& n, int events);
+	void timer_callback(const TimerInfo& info);
 	void wake_up_handler(void);
 
 	void disableSocketNotifiers(bool disable);

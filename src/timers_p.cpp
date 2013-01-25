@@ -360,23 +360,21 @@ int EventDispatcherEPollPrivate::remainingTime(int timerId) const
 	return -1;
 }
 
-void EventDispatcherEPollPrivate::timer_callback(TimerInfo* info)
+void EventDispatcherEPollPrivate::timer_callback(const TimerInfo& info)
 {
-	Q_ASSUME(info != 0);
-
 	uint64_t value;
 	int res;
 	do {
-		res = read(info->fd, &value, sizeof(value));
+		res = read(info.fd, &value, sizeof(value));
 	} while (-1 == res && EINTR == errno);
 
 	if (Q_UNLIKELY(-1 == res)) {
 		qErrnoWarning("%s: read() failed", Q_FUNC_INFO);
 	}
 
-	int tid = info->timerId;
-	QTimerEvent event(info->timerId);
-	QCoreApplication::sendEvent(info->object, &event);
+	int tid = info.timerId;
+	QTimerEvent event(tid);
+	QCoreApplication::sendEvent(info.object, &event);
 
 	TimerHash::Iterator it = this->m_timers.find(tid);
 	if (it != this->m_timers.end()) {
