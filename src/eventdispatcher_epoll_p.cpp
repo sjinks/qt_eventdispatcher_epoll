@@ -89,8 +89,8 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 				}
 			}
 			else {
-				HandleHash::Iterator it = this->m_handles.find(fd);
-				if (it != this->m_handles.constEnd()) {
+				HandleHash::ConstIterator it = this->m_handles.find(fd);
+				if (Q_LIKELY(it != this->m_handles.constEnd())) {
 					HandleData* data = it.value();
 					switch (data->type) {
 						case EventDispatcherEPollPrivate::htSocketNotifier:
