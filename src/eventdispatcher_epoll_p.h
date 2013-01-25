@@ -16,6 +16,39 @@ namespace Qt { // Sorry
 }
 #endif
 
+enum HandleType {
+	htTimer,
+	htSocketNotifier
+};
+
+struct Q_DECL_HIDDEN SocketNotifierInfo {
+	QSocketNotifier* r;
+	QSocketNotifier* w;
+	QSocketNotifier* x;
+	int events;
+};
+
+struct Q_DECL_HIDDEN TimerInfo {
+	QObject* object;
+	struct timeval when;
+	int timerId;
+	int interval;
+	int fd;
+	Qt::TimerType type;
+};
+
+struct HandleData {
+	HandleType type;
+	union {
+		SocketNotifierInfo sni;
+		TimerInfo ti;
+	};
+};
+
+Q_DECLARE_TYPEINFO(SocketNotifierInfo, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(TimerInfo, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(HandleData, Q_PRIMITIVE_TYPE);
+
 class EventDispatcherEPoll;
 
 class Q_DECL_HIDDEN EventDispatcherEPollPrivate {
@@ -31,37 +64,6 @@ public:
 	QList<QAbstractEventDispatcher::TimerInfo> registeredTimers(QObject* object) const;
 	int remainingTime(int timerId) const;
 	void wakeup(void);
-
-	enum HandleType {
-		htTimer,
-		htSocketNotifier
-	};
-
-	struct HandleData;
-
-	struct SocketNotifierInfo {
-		QSocketNotifier* r;
-		QSocketNotifier* w;
-		QSocketNotifier* x;
-		int events;
-	};
-
-	struct TimerInfo {
-		QObject* object;
-		struct timeval when;
-		int timerId;
-		int interval;
-		int fd;
-		Qt::TimerType type;
-	};
-
-	struct HandleData {
-		EventDispatcherEPollPrivate::HandleType type;
-		union {
-			SocketNotifierInfo sni;
-			TimerInfo ti;
-		};
-	};
 
 	typedef QHash<int, HandleData*> HandleHash;
 	typedef QHash<int, HandleData*> TimerHash;
@@ -80,11 +82,11 @@ private:
 	SocketNotifierHash m_notifiers;
 	TimerHash m_timers;
 
-	static void calculateCoarseTimerTimeout(EventDispatcherEPollPrivate::TimerInfo* info, const struct timeval& now, struct timeval& when);
-	static void calculateNextTimeout(EventDispatcherEPollPrivate::TimerInfo* info, const struct timeval& now, struct timeval& delta);
+	static void calculateCoarseTimerTimeout(TimerInfo* info, const struct timeval& now, struct timeval& when);
+	static void calculateNextTimeout(TimerInfo* info, const struct timeval& now, struct timeval& delta);
 
-	void socket_notifier_callback(EventDispatcherEPollPrivate::SocketNotifierInfo* n, int events);
-	void timer_callback(EventDispatcherEPollPrivate::TimerInfo* info);
+	void socket_notifier_callback(SocketNotifierInfo* n, int events);
+	void timer_callback(TimerInfo* info);
 	void wake_up_handler(void);
 
 	void disableSocketNotifiers(bool disable);

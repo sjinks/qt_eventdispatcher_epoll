@@ -8,7 +8,7 @@
 #include "eventdispatcher_epoll_p.h"
 #include "qt4compat.h"
 
-void EventDispatcherEPollPrivate::calculateCoarseTimerTimeout(EventDispatcherEPollPrivate::TimerInfo* info, const struct timeval& now, struct timeval& when)
+void EventDispatcherEPollPrivate::calculateCoarseTimerTimeout(TimerInfo* info, const struct timeval& now, struct timeval& when)
 {
 	Q_ASSERT(info->interval > 20);
 	// The coarse timer works like this:
@@ -120,7 +120,7 @@ void EventDispatcherEPollPrivate::calculateCoarseTimerTimeout(EventDispatcherEPo
 	Q_ASSERT(timercmp(&now, &when, <=));
 }
 
-void EventDispatcherEPollPrivate::calculateNextTimeout(EventDispatcherEPollPrivate::TimerInfo* info, const struct timeval& now, struct timeval& delta)
+void EventDispatcherEPollPrivate::calculateNextTimeout(TimerInfo* info, const struct timeval& now, struct timeval& delta)
 {
 	struct timeval tv_interval;
 	struct timeval when;
@@ -185,7 +185,7 @@ void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::T
 		gettimeofday(&now, 0);
 
 		HandleData* data  = new HandleData();
-		data->type        = EventDispatcherEPollPrivate::htTimer;
+		data->type        = htTimer;
 		data->ti.object   = object;
 		data->ti.when     = now; // calculateNextTimeout() will take care of info->when
 		data->ti.timerId  = timerId;
@@ -243,8 +243,8 @@ bool EventDispatcherEPollPrivate::unregisterTimer(int timerId)
 	if (Q_LIKELY(it != this->m_timers.end())) {
 		HandleData* data = it.value();
 
-		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htTimer);
-		if (data->type == EventDispatcherEPollPrivate::htTimer) {
+		Q_ASSERT(data->type == htTimer);
+		if (data->type == htTimer) {
 			int fd = data->ti.fd;
 
 			if (Q_UNLIKELY(-1 == epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, fd, 0))) {
@@ -273,8 +273,8 @@ bool EventDispatcherEPollPrivate::unregisterTimers(QObject* object)
 	while (it != this->m_timers.end()) {
 		HandleData* data = it.value();
 
-		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htTimer);
-		if (data->type == EventDispatcherEPollPrivate::htTimer) {
+		Q_ASSERT(data->type == htTimer);
+		if (data->type == htTimer) {
 			if (object == data->ti.object) {
 				int fd = data->ti.fd;
 
@@ -308,8 +308,8 @@ QList<QAbstractEventDispatcher::TimerInfo> EventDispatcherEPollPrivate::register
 	while (it != this->m_timers.constEnd()) {
 		HandleData* data = it.value();
 
-		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htTimer);
-		if (data->type == EventDispatcherEPollPrivate::htTimer) {
+		Q_ASSERT(data->type == htTimer);
+		if (data->type == htTimer) {
 			if (object == data->ti.object) {
 #if QT_VERSION < 0x050000
 				QAbstractEventDispatcher::TimerInfo ti(it.key(), data->ti.interval);
@@ -335,8 +335,8 @@ int EventDispatcherEPollPrivate::remainingTime(int timerId) const
 	if (it != this->m_timers.end()) {
 		HandleData* data = it.value();
 
-		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htTimer);
-		if (data->type == EventDispatcherEPollPrivate::htTimer) {
+		Q_ASSERT(data->type == htTimer);
+		if (data->type == htTimer) {
 			struct timeval when;
 			struct itimerspec spec;
 
@@ -360,7 +360,7 @@ int EventDispatcherEPollPrivate::remainingTime(int timerId) const
 	return -1;
 }
 
-void EventDispatcherEPollPrivate::timer_callback(EventDispatcherEPollPrivate::TimerInfo* info)
+void EventDispatcherEPollPrivate::timer_callback(TimerInfo* info)
 {
 	Q_ASSUME(info != 0);
 
@@ -382,8 +382,8 @@ void EventDispatcherEPollPrivate::timer_callback(EventDispatcherEPollPrivate::Ti
 	if (it != this->m_timers.end()) {
 		HandleData* data = it.value();
 
-		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htTimer);
-		if (data->type == EventDispatcherEPollPrivate::htTimer) {
+		Q_ASSERT(data->type == htTimer);
+		if (data->type == htTimer) {
 			struct timeval now;
 			struct timeval delta;
 			struct itimerspec spec;
@@ -425,8 +425,8 @@ void EventDispatcherEPollPrivate::disableTimers(bool disable)
 	while (it != this->m_timers.end()) {
 		HandleData* data = it.value();
 
-		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htTimer);
-		if (data->type == EventDispatcherEPollPrivate::htTimer) {
+		Q_ASSERT(data->type == htTimer);
+		if (data->type == htTimer) {
 			if (!disable) {
 				struct timeval delta;
 				EventDispatcherEPollPrivate::calculateNextTimeout(&data->ti, now, delta);

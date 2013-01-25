@@ -23,8 +23,8 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 	HandleHash::Iterator it = this->m_handles.find(fd);
 
 	if (it == this->m_handles.end()) {
-		data        = new EventDispatcherEPollPrivate::HandleData();
-		data->type  = EventDispatcherEPollPrivate::htSocketNotifier;
+		data        = new HandleData;
+		data->type  = htSocketNotifier;
 		data->sni.r = 0;
 		data->sni.w = 0;
 		data->sni.x = 0;
@@ -53,8 +53,8 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 	else {
 		data = it.value();
 
-		Q_ASSERT(data->type == EventDispatcherEPollPrivate::htSocketNotifier);
-		if (data->type == EventDispatcherEPollPrivate::htSocketNotifier) {
+		Q_ASSERT(data->type == htSocketNotifier);
+		if (data->type == htSocketNotifier) {
 			switch (notifier->type()) {
 				case QSocketNotifier::Read:      events = EPOLLIN;  n = &data->sni.r; break;
 				case QSocketNotifier::Write:     events = EPOLLOUT; n = &data->sni.w; break;

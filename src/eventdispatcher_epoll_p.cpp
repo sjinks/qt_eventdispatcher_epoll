@@ -93,11 +93,11 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 				if (Q_LIKELY(it != this->m_handles.constEnd())) {
 					HandleData* data = it.value();
 					switch (data->type) {
-						case EventDispatcherEPollPrivate::htSocketNotifier:
+						case htSocketNotifier:
 							this->socket_notifier_callback(&data->sni, e.events);
 							break;
 
-						case EventDispatcherEPollPrivate::htTimer:
+						case htTimer:
 							this->timer_callback(&data->ti);
 							break;
 
