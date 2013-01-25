@@ -37,7 +37,7 @@ struct Q_DECL_HIDDEN TimerInfo {
 	Qt::TimerType type;
 };
 
-struct HandleData {
+struct Q_DECL_HIDDEN HandleData {
 	HandleType type;
 	union {
 		SocketNotifierInfo sni;
