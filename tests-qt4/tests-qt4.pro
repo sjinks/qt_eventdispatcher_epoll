@@ -6,3 +6,5 @@ SUBDIRS = \
 	qtimer \
 	qsocketnotifier \
 	events
+
+unix: SUBDIRS += issues
