@@ -1,3 +1,4 @@
+#include <qplatformdefs.h>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QEventLoop>
 #include <QtCore/QSocketNotifier>
@@ -5,11 +6,6 @@
 #include <QtNetwork/QTcpServer>
 #include <QtNetwork/QTcpSocket>
 #include <QtTest/QtTest>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
 #include "eventdispatcher_epoll.h"
 
 class EventDispatcherTest : public QObject {
@@ -96,7 +92,11 @@ void EventDispatcherTest::issue3(void)
 
 int main(int argc, char** argv)
 {
-	EventDispatcherEPoll e;
+#if QT_VERSION < 0x050000
+	EventDispatcherEPoll d;
+#else
+	QCoreApplication::setEventDispatcher(new EventDispatcherEPoll);
+#endif
 	QCoreApplication app(argc, argv);
 	EventDispatcherTest t;
 	return QTest::qExec(&t, argc, argv);
