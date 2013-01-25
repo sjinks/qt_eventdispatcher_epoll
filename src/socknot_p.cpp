@@ -112,7 +112,7 @@ void EventDispatcherEPollPrivate::unregisterSocketNotifier(QSocketNotifier* noti
 			info->sni.x       = 0;
 		}
 		else {
-			qCritical("%s: cannot find socket notifier %p", Q_FUNC_INFO, notifier);
+			qFatal("%s: internal error: cannot find socket notifier", Q_FUNC_INFO);
 		}
 
 		e.events = info->sni.events;
