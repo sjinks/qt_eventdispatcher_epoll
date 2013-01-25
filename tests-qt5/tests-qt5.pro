@@ -5,6 +5,5 @@ SUBDIRS = \
 	qeventloop \
 	qtimer \
 	qsocketnotifier \
-	events
-
-unix: SUBDIRS += issues
+	events \
+	issues
