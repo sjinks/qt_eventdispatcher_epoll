@@ -9,6 +9,9 @@
 
 void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifier)
 {
+	Q_ASSERT(notifier != 0);
+	Q_ASSUME(notifier != 0);
+
 	int events = 0;
 	QSocketNotifier** n = 0;
 	int fd = static_cast<int>(notifier->socket());
@@ -66,6 +69,8 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 				return;
 			}
 
+			Q_ASSERT((data->sni.events & events) == 0);
+
 			data->sni.events |= events;
 			e.events          = data->sni.events;
 			*n                = notifier;
@@ -81,11 +86,15 @@ void EventDispatcherEPollPrivate::registerSocketNotifier(QSocketNotifier* notifi
 		}
 	}
 
+	Q_ASSERT(!this->m_notifiers.contains(notifier));
 	this->m_notifiers.insert(notifier, data);
 }
 
 void EventDispatcherEPollPrivate::unregisterSocketNotifier(QSocketNotifier* notifier)
 {
+	Q_ASSERT(notifier != 0);
+	Q_ASSUME(notifier != 0);
+
 	SocketNotifierHash::Iterator it = this->m_notifiers.find(notifier);
 	if (Q_LIKELY(it != this->m_notifiers.end())) {
 		HandleData* info = it.value();
