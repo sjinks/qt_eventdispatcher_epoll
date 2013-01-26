@@ -1,5 +1,6 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QEvent>
+#include <QtCore/QPair>
 #include <sys/epoll.h>
 #include <sys/timerfd.h>
 #include <sys/time.h>

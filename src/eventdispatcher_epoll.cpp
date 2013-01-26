@@ -1,3 +1,4 @@
+#include <QtCore/QPair>
 #include <QtCore/QSocketNotifier>
 #include <QtCore/QThread>
 #include "eventdispatcher_epoll.h"
@@ -10,6 +11,10 @@ EventDispatcherEPoll::EventDispatcherEPoll(QObject* parent)
 
 EventDispatcherEPoll::~EventDispatcherEPoll(void)
 {
+#if QT_VERSION < 0x040600
+	delete this->d_ptr;
+	this->d_ptr = 0;
+#endif
 }
 
 bool EventDispatcherEPoll::processEvents(QEventLoop::ProcessEventsFlags flags)

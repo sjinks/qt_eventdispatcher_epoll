@@ -11,7 +11,10 @@
 EventDispatcherEPollPrivate::EventDispatcherEPollPrivate(EventDispatcherEPoll* const q)
 	: q_ptr(q),
 	  m_epoll_fd(-1), m_event_fd(-1),
-	  m_interrupt(false), m_wakeups(),
+	  m_interrupt(false),
+#if QT_VERSION >= 0x040400
+	  m_wakeups(),
+#endif
 	  m_handles(), m_notifiers(), m_timers()
 {
 	this->m_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
@@ -132,14 +135,20 @@ void EventDispatcherEPollPrivate::wake_up_handler(void)
 		qErrnoWarning("%s: eventfd_read() failed", Q_FUNC_INFO);
 	}
 
+#if QT_VERSION >= 0x040400
 	if (Q_UNLIKELY(!this->m_wakeups.testAndSetRelease(1, 0))) {
 		qCritical("%s: internal error, testAndSetRelease(1, 0) failed!", Q_FUNC_INFO);
 	}
+#endif
 }
 
 void EventDispatcherEPollPrivate::wakeup(void)
 {
-	if (this->m_wakeups.testAndSetAcquire(0, 1)) {
+#if QT_VERSION >= 0x040400
+	if (this->m_wakeups.testAndSetAcquire(0, 1))
+#endif
+	{
+	
 		const eventfd_t value = 1;
 		int res;
 

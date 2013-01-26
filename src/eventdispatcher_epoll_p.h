@@ -3,8 +3,13 @@
 
 #include <qplatformdefs.h>
 #include <QtCore/QAbstractEventDispatcher>
-#include <QtCore/QAtomicInt>
 #include <QtCore/QHash>
+
+#if QT_VERSION >= 0x040400
+#	include <QtCore/QAtomicInt>
+#endif
+
+#include "qt4compat.h"
 
 #if QT_VERSION < 0x050000
 namespace Qt { // Sorry
@@ -21,14 +26,14 @@ enum HandleType {
 	htSocketNotifier
 };
 
-struct Q_DECL_HIDDEN SocketNotifierInfo {
+struct SocketNotifierInfo {
 	QSocketNotifier* r;
 	QSocketNotifier* w;
 	QSocketNotifier* x;
 	int events;
 };
 
-struct Q_DECL_HIDDEN TimerInfo {
+struct TimerInfo {
 	QObject* object;
 	struct timeval when;
 	int timerId;
@@ -37,7 +42,7 @@ struct Q_DECL_HIDDEN TimerInfo {
 	Qt::TimerType type;
 };
 
-struct Q_DECL_HIDDEN HandleData {
+struct HandleData {
 	HandleType type;
 	union {
 		SocketNotifierInfo sni;
@@ -77,7 +82,9 @@ private:
 	int m_epoll_fd;
 	int m_event_fd;
 	bool m_interrupt;
+#if QT_VERSION >= 0x040400
 	QAtomicInt m_wakeups;
+#endif
 	HandleHash m_handles;
 	SocketNotifierHash m_notifiers;
 	TimerHash m_timers;

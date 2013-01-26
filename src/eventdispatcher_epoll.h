@@ -41,7 +41,11 @@ public:
 private:
 	Q_DISABLE_COPY(EventDispatcherEPoll)
 	Q_DECLARE_PRIVATE(EventDispatcherEPoll)
+#if QT_VERSION >= 0x040600
 	QScopedPointer<EventDispatcherEPollPrivate> d_ptr;
+#else
+	EventDispatcherEPollPrivate* d_ptr;
+#endif
 };
 
 #endif // EVENTDISPATCHER_EPOLL_H

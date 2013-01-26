@@ -14,7 +14,7 @@ epoll()-based event dispatcher for Qt (for Linux only)
 ## Requirements
 * Linux kernel >= 2.6.27
 * glibc >= 2.9
-* Qt >= 4.8.0 (may work with an older Qt but this has not been tested)
+* Qt >= 4.2.1 (may work with an older Qt but this has not been tested)
 
 
 ## Build

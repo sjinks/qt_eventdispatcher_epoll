@@ -21,6 +21,14 @@
 #	endif
 #endif
 
+#ifndef Q_FUNC_INFO
+#	if defined(_MSC_VER)
+#		define Q_FUNC_INFO __FUNCSIG__
+#	elif defined(__GNUC__) || defined(_DIAB_TOOL)
+#		define Q_FUNC_INFO __PRETTY_FUNCTION__
+#	endif
+#endif
+
 #ifndef Q_LIKELY
 #	define Q_LIKELY(s) s
 #endif
@@ -35,6 +43,27 @@
 
 #ifndef Q_ASSUME
 #	define Q_ASSUME(s) if (s) {} else { Q_UNREACHABLE(); }
+#endif
+
+#ifndef Q_DECL_HIDDEN
+#	define Q_DECL_HIDDEN
+#endif
+
+#ifndef QT_STRINGIFY
+#	define QT_STRINGIFY2(x) #x
+#	define QT_STRINGIFY(x) QT_STRINGIFY2(x)
+#endif
+
+#ifndef Q_FUNC_INFO
+#	if defined(Q_OS_SOLARIS) || defined(Q_CC_XLC)
+#		define Q_FUNC_INFO __FILE__ "(line number unavailable)"
+#	else
+#		define Q_FUNC_INFO __FILE__ ":" QT_STRINGIFY(__LINE__)
+#	endif
+#endif
+
+#ifndef Q_EMIT
+#	define Q_EMIT emit
 #endif
 
 #endif // QT4COMPAT_H
