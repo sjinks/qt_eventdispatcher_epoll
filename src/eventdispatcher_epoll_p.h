@@ -11,16 +11,6 @@
 
 #include "qt4compat.h"
 
-#if QT_VERSION < 0x050000
-namespace Qt { // Sorry
-	enum TimerType {
-		PreciseTimer,
-		CoarseTimer,
-		VeryCoarseTimer
-	};
-}
-#endif
-
 enum HandleType {
 	htTimer,
 	htSocketNotifier
