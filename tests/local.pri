@@ -4,4 +4,4 @@ DEPENDPATH  += $$PWD $$PWD/../src
 HEADERS += $$PWD/eventdispatcher.h
 
 CONFIG  *= link_prl
-LIBS    += -L$$OUT_PWD/$$DESTDIR/../lib -leventdispatcher_libepoll
+LIBS    += -L$$OUT_PWD/$$DESTDIR/../lib -leventdispatcher_epoll
