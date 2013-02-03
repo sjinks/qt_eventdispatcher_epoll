@@ -18,13 +18,13 @@ EventDispatcherEPollPrivate::EventDispatcherEPollPrivate(EventDispatcherEPoll* c
 	  m_handles(), m_notifiers(), m_timers()
 {
 	this->m_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
-	if (-1 == this->m_epoll_fd) {
+	if (Q_UNLIKELY(-1 == this->m_epoll_fd)) {
 		qErrnoWarning("epoll_create1() failed");
 		abort();
 	}
 
 	this->m_event_fd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
-	if (-1 == this->m_event_fd) {
+	if (Q_UNLIKELY(-1 == this->m_event_fd)) {
 		qErrnoWarning("eventfd() failed");
 		abort();
 	}
@@ -32,7 +32,7 @@ EventDispatcherEPollPrivate::EventDispatcherEPollPrivate(EventDispatcherEPoll* c
 	struct epoll_event e;
 	e.events  = EPOLLIN;
 	e.data.fd = this->m_event_fd;
-	if (-1 == epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, this->m_event_fd, &e)) {
+	if (Q_UNLIKELY(-1 == epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, this->m_event_fd, &e))) {
 		qErrnoWarning("%s: epoll_ctl() failed", Q_FUNC_INFO);
 	}
 }
@@ -85,7 +85,7 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 		struct epoll_event events[1024];
 		do {
 			n_events = epoll_wait(this->m_epoll_fd, events, 1024, timeout);
-		} while (-1 == n_events && errno == EINTR);
+		} while (Q_UNLIKELY(-1 == n_events && errno == EINTR));
 
 		for (int i=0; i<n_events; ++i) {
 			struct epoll_event& e = events[i];
@@ -133,7 +133,7 @@ void EventDispatcherEPollPrivate::wake_up_handler(void)
 	int res;
 	do {
 		res = eventfd_read(this->m_event_fd, &value);
-	} while (-1 == res && EINTR == errno);
+	} while (Q_UNLIKELY(-1 == res && EINTR == errno));
 
 	if (Q_UNLIKELY(-1 == res)) {
 		qErrnoWarning("%s: eventfd_read() failed", Q_FUNC_INFO);
@@ -152,13 +152,12 @@ void EventDispatcherEPollPrivate::wakeup(void)
 	if (this->m_wakeups.testAndSetAcquire(0, 1))
 #endif
 	{
-	
 		const eventfd_t value = 1;
 		int res;
 
 		do {
 			res = eventfd_write(this->m_event_fd, value);
-		} while (-1 == res && EINTR == errno);
+		} while (Q_UNLIKELY(-1 == res && EINTR == errno));
 
 		if (Q_UNLIKELY(-1 == res)) {
 			qErrnoWarning("%s: eventfd_write() failed", Q_FUNC_INFO);
