@@ -67,7 +67,7 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 	this->m_interrupt = false;
 	Q_EMIT q->awake();
 
-	int n_events = q->hasPendingEvents() ? 1 : 0;
+	bool result = q->hasPendingEvents();
 
 #if QT_VERSION < 0x040500
 	QCoreApplication::sendPostedEvents(0, (flags & QEventLoop::DeferredDeletion) ? -1 : 0);
@@ -75,8 +75,9 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 	QCoreApplication::sendPostedEvents();
 #endif
 
-	bool can_wait = !this->m_interrupt && (flags & QEventLoop::WaitForMoreEvents) && (0 == n_events);
+	bool can_wait = !this->m_interrupt && (flags & QEventLoop::WaitForMoreEvents) && !result;
 	int timeout   = 0;
+	int n_events  = 0;
 
 	if (can_wait) {
 		Q_EMIT q->aboutToBlock();
@@ -126,7 +127,7 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 		this->disableTimers(false);
 	}
 
-	return n_events > 0;
+	return result || n_events > 0;
 }
 
 void EventDispatcherEPollPrivate::wake_up_handler(void)
