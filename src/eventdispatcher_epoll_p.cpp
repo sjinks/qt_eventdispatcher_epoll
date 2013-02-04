@@ -66,14 +66,16 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 
 	this->m_interrupt = false;
 	Q_EMIT q->awake();
+
+	int n_events = q->hasPendingEvents() ? 1 : 0;
+
 #if QT_VERSION < 0x040500
 	QCoreApplication::sendPostedEvents(0, (flags & QEventLoop::DeferredDeletion) ? -1 : 0);
 #else
 	QCoreApplication::sendPostedEvents();
 #endif
 
-	int n_events  = 0;
-	bool can_wait = !this->m_interrupt && (flags & QEventLoop::WaitForMoreEvents);
+	bool can_wait = !this->m_interrupt && (flags & QEventLoop::WaitForMoreEvents) && (0 == n_events);
 	int timeout   = 0;
 
 	if (can_wait) {
