@@ -6,3 +6,4 @@
 moc_*.cpp
 Makefile
 Makefile.*
+/tests/tst_*
