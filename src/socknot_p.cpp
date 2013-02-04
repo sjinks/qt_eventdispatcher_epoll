@@ -168,7 +168,7 @@ void EventDispatcherEPollPrivate::socket_notifier_callback(const SocketNotifierI
 	}
 }
 
-void EventDispatcherEPollPrivate::disableSocketNotifiers(bool disable)
+bool EventDispatcherEPollPrivate::disableSocketNotifiers(bool disable)
 {
 	epoll_event e;
 
@@ -187,4 +187,6 @@ void EventDispatcherEPollPrivate::disableSocketNotifiers(bool disable)
 
 		++it;
 	}
+
+	return true;
 }

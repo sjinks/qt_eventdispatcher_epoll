@@ -32,6 +32,11 @@ struct TimerInfo {
 	Qt::TimerType type;
 };
 
+struct ZeroTimer {
+	QObject* object;
+	bool active;
+};
+
 struct HandleData {
 	HandleType type;
 	union {
@@ -54,6 +59,7 @@ public:
 	void registerSocketNotifier(QSocketNotifier* notifier);
 	void unregisterSocketNotifier(QSocketNotifier* notifier);
 	void registerTimer(int timerId, int interval, Qt::TimerType type, QObject* object);
+	void registerZeroTimer(int timerId, QObject* object);
 	bool unregisterTimer(int timerId);
 	bool unregisterTimers(QObject* object);
 	QList<QAbstractEventDispatcher::TimerInfo> registeredTimers(QObject* object) const;
@@ -63,6 +69,7 @@ public:
 	typedef QHash<int, HandleData*> HandleHash;
 	typedef QHash<int, HandleData*> TimerHash;
 	typedef QHash<QSocketNotifier*, HandleData*> SocketNotifierHash;
+	typedef QHash<int, ZeroTimer> ZeroTimerHash;
 
 private:
 	Q_DISABLE_COPY(EventDispatcherEPollPrivate)
@@ -78,16 +85,14 @@ private:
 	HandleHash m_handles;
 	SocketNotifierHash m_notifiers;
 	TimerHash m_timers;
-
-	static void calculateCoarseTimerTimeout(TimerInfo* info, const struct timeval& now, struct timeval& when);
-	static void calculateNextTimeout(TimerInfo* info, const struct timeval& now, struct timeval& delta);
+	ZeroTimerHash m_zero_timers;
 
 	void socket_notifier_callback(const SocketNotifierInfo& n, int events);
 	void timer_callback(const TimerInfo& info);
 	void wake_up_handler(void);
 
-	void disableSocketNotifiers(bool disable);
-	void disableTimers(bool disable);
+	bool disableSocketNotifiers(bool disable);
+	bool disableTimers(bool disable);
 };
 
 #endif // EVENTDISPATCHER_EPOLL_P_H

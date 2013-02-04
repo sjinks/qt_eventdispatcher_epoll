@@ -15,7 +15,7 @@ EventDispatcherEPollPrivate::EventDispatcherEPollPrivate(EventDispatcherEPoll* c
 #if QT_VERSION >= 0x040400
 	  m_wakeups(),
 #endif
-	  m_handles(), m_notifiers(), m_timers()
+	  m_handles(), m_notifiers(), m_timers(), m_zero_timers()
 {
 	this->m_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
 	if (Q_UNLIKELY(-1 == this->m_epoll_fd)) {
@@ -53,16 +53,11 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 {
 	Q_Q(EventDispatcherEPoll);
 
-	bool exclude_notifiers = (flags & QEventLoop::ExcludeSocketNotifiers);
-	bool exclude_timers    = (flags & QEventLoop::X11ExcludeTimers);
+	const bool exclude_notifiers = (flags & QEventLoop::ExcludeSocketNotifiers);
+	const bool exclude_timers    = (flags & QEventLoop::X11ExcludeTimers);
 
-	if (exclude_notifiers) {
-		this->disableSocketNotifiers(true);
-	}
-
-	if (exclude_timers) {
-		this->disableTimers(true);
-	}
+	exclude_notifiers && this->disableSocketNotifiers(true);
+	exclude_timers    && this->disableTimers(true);
 
 	this->m_interrupt = false;
 	Q_EMIT q->awake();
@@ -75,16 +70,48 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 	QCoreApplication::sendPostedEvents();
 #endif
 
-	bool can_wait = !this->m_interrupt && (flags & QEventLoop::WaitForMoreEvents) && !result;
-	int timeout   = exclude_timers ? 0 : 1;
-	int n_events  = 0;
+	bool can_wait =
+			!this->m_interrupt
+		 && (flags & QEventLoop::WaitForMoreEvents)
+		 && !result
+	;
 
-	if (can_wait) {
-		Q_EMIT q->aboutToBlock();
-		timeout = -1;
-	}
+	int timeout  = 0;
+	int n_events = 0;
 
 	if (!this->m_interrupt) {
+		if (!exclude_timers && this->m_zero_timers.size() > 0) {
+			QList<int> ids = this->m_zero_timers.keys();
+
+			for (int i=0; i<ids.size(); ++i) {
+				int tid = ids.at(i);
+				ZeroTimerHash::Iterator it = this->m_zero_timers.find(tid);
+				if (it != this->m_zero_timers.end()) {
+					ZeroTimer& data = it.value();
+					if (data.active) {
+						data.active = false;
+
+						QTimerEvent event(tid);
+						QCoreApplication::sendEvent(data.object, &event);
+						result = true;
+
+						it = this->m_zero_timers.find(tid);
+						if (it != this->m_zero_timers.end()) {
+							ZeroTimer& data = it.value();
+							if (!data.active) {
+								data.active = true;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (can_wait && !result) {
+			Q_EMIT q->aboutToBlock();
+			timeout = -1;
+		}
+
 		struct epoll_event events[1024];
 		do {
 			n_events = epoll_wait(this->m_epoll_fd, events, 1024, timeout);
@@ -119,13 +146,8 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 		}
 	}
 
-	if (exclude_notifiers) {
-		this->disableSocketNotifiers(false);
-	}
-
-	if (exclude_timers) {
-		this->disableTimers(false);
-	}
+	exclude_notifiers && this->disableSocketNotifiers(false);
+	exclude_timers    && this->disableTimers(false);
 
 	return result || n_events > 0;
 }
