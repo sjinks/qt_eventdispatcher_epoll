@@ -76,7 +76,7 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 #endif
 
 	bool can_wait = !this->m_interrupt && (flags & QEventLoop::WaitForMoreEvents) && !result;
-	int timeout   = 0;
+	int timeout   = exclude_timers ? 0 : 1;
 	int n_events  = 0;
 
 	if (can_wait) {
