@@ -350,7 +350,6 @@ QList<QAbstractEventDispatcher::TimerInfo> EventDispatcherEPollPrivate::register
 		++zit;
 	}
 
-
 	return res;
 }
 
