@@ -1,6 +1,6 @@
 # qt_eventdispatcher_epoll [![Build Status](https://secure.travis-ci.org/sjinks/qt_eventdispatcher_epoll.png)](http://travis-ci.org/sjinks/qt_eventdispatcher_epoll)
 
-epoll()-based event dispatcher for Qt (for Linux only)
+epoll(7)-based event dispatcher for Qt (for Linux only)
 
 ## Features
 * very fast :-)
