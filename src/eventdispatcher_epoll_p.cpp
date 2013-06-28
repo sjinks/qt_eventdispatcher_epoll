@@ -76,10 +76,11 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 		 && !result
 	;
 
-	int timeout  = 0;
 	int n_events = 0;
 
 	if (!this->m_interrupt) {
+		int timeout = 0;
+
 		if (!exclude_timers && this->m_zero_timers.size() > 0) {
 			QList<int> ids = this->m_zero_timers.keys();
 
