@@ -87,7 +87,7 @@ private:
 	TimerHash m_timers;
 	ZeroTimerHash m_zero_timers;
 
-	void socket_notifier_callback(const SocketNotifierInfo& n, int events);
+	static void socket_notifier_callback(const SocketNotifierInfo& n, int events);
 	void timer_callback(const TimerInfo& info);
 	void wake_up_handler(void);
 

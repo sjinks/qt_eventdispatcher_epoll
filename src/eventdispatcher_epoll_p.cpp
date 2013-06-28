@@ -132,7 +132,7 @@ bool EventDispatcherEPollPrivate::processEvents(QEventLoop::ProcessEventsFlags f
 					HandleData* data = it.value();
 					switch (data->type) {
 						case htSocketNotifier:
-							this->socket_notifier_callback(data->sni, e.events);
+							EventDispatcherEPollPrivate::socket_notifier_callback(data->sni, e.events);
 							break;
 
 						case htTimer:
