@@ -8,8 +8,6 @@ epoll(7)-based event dispatcher for Qt (for Linux only)
 * does not use any private Qt headers
 * passes Qt 4 and Qt 5 event dispatcher, event loop, timer and socket notifier tests
 
-## Unsupported Features
-* undocumented `QCoreApplication::watchUnixSignal()` is not supported (GLib dispatcher does not support it either; this feature was removed from Qt 5 anyway)
 
 ## Requirements
 * Linux kernel >= 2.6.27
