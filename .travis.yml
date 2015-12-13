@@ -1,5 +1,12 @@
 language: cpp
 
+sudo: required
+dist: trusty
+
+env:
+  - PACKAGES=libqt4-dev libqt4-private-dev
+  - PACKAGES=qt5base-dev qtbase5-private-dev
+
 compiler:
   - gcc
   - clang
@@ -9,15 +16,9 @@ branches:
     - master
 
 before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get -qq -y install $PACKAGES
   - git submodule update --init --recursive
-
-sudo: false
-
-addons:
-  apt:
-    packages:
-    - libqt4-dev
-    - libqt4-private-dev
 
 script:
   - ./build.sh
