@@ -5,7 +5,7 @@ dist: trusty
 
 env:
   - PACKAGES="libqt4-dev libqt4-private-dev"
-  - PACKAGES="qtbase5-dev qtbase5-private-dev"
+  - PACKAGES="qtbase5-dev qtbase5-private-dev qt5-qmake"
 
 compiler:
   - gcc
