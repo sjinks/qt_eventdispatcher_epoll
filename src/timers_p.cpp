@@ -205,6 +205,7 @@ void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::T
 		data->ti.interval = interval;
 		data->ti.fd       = fd;
 		data->ti.type     = type;
+		data->ti.is_in_callback = false;
 
 		if (Qt::CoarseTimer == type) {
 			if (interval >= 20000) {
