@@ -30,6 +30,7 @@ struct TimerInfo {
 	int interval;
 	int fd;
 	Qt::TimerType type;
+	bool is_in_callback;
 };
 
 struct ZeroTimer {
@@ -88,7 +89,7 @@ private:
 	ZeroTimerHash m_zero_timers;
 
 	static void socket_notifier_callback(const SocketNotifierInfo& n, int events);
-	void timer_callback(const TimerInfo& info);
+	void timer_callback(TimerInfo& info);
 	void wake_up_handler(void);
 
 	bool disableSocketNotifiers(bool disable);

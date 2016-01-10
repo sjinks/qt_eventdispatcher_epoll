@@ -123,7 +123,7 @@ namespace {
 		Q_ASSERT(timercmp(&now, &when, <=));
 	}
 
-	void calculateNextTimeout(TimerInfo* info, const struct timeval& now, struct timeval& delta)
+	void calculateNextTimeout(TimerInfo* info, const struct timeval& now, struct itimerspec& spec)
 	{
 		struct timeval tv_interval;
 		struct timeval when;
@@ -174,14 +174,18 @@ namespace {
 			calculateCoarseTimerTimeout(info, now, when);
 		}
 
+		struct timeval delta;
 		timersub(&when, &now, &delta);
 
 		if (delta.tv_sec == 0 && delta.tv_usec == 0) {
 			// Set to min value or otherwise timerfd API will disarm the timer.
 			delta.tv_usec = 1;
 		}
-	}
 
+		TIMEVAL_TO_TIMESPEC(&delta, &spec.it_value);
+		TIMEVAL_TO_TIMESPEC(&delta, &spec.it_interval);
+		Q_ASSERT(!(0 == spec.it_value.tv_sec && 0 == spec.it_value.tv_nsec));
+	}
 }
 
 void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::TimerType type, QObject* object)
@@ -211,15 +215,8 @@ void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::T
 			}
 		}
 
-		struct timeval delta;
-		calculateNextTimeout(&data->ti, now, delta);
-
 		struct itimerspec spec;
-		spec.it_interval.tv_sec  = 0;
-		spec.it_interval.tv_nsec = 0;
-
-		TIMEVAL_TO_TIMESPEC(&delta, &spec.it_value);
-		Q_ASSERT(!(0 == spec.it_value.tv_sec && 0 == spec.it_value.tv_nsec));
+		calculateNextTimeout(&data->ti, now, spec);
 
 		if (Q_UNLIKELY(-1 == timerfd_settime(fd, 0, &spec, 0))) {
 			qErrnoWarning("%s: timerfd_settime() failed", Q_FUNC_INFO);
@@ -387,7 +384,7 @@ int EventDispatcherEPollPrivate::remainingTime(int timerId) const
 	return -1;
 }
 
-void EventDispatcherEPollPrivate::timer_callback(const TimerInfo& info)
+void EventDispatcherEPollPrivate::timer_callback(TimerInfo& info)
 {
 	uint64_t value;
 	int res;
@@ -399,29 +396,14 @@ void EventDispatcherEPollPrivate::timer_callback(const TimerInfo& info)
 		qErrnoWarning("%s: read() failed", Q_FUNC_INFO);
 	}
 
-	int tid = info.timerId;
-	QTimerEvent event(tid);
-	QCoreApplication::sendEvent(info.object, &event);
-
-	TimerHash::Iterator it = this->m_timers.find(tid);
-	if (it != this->m_timers.end()) {
-		HandleData* data = it.value();
-
-		struct timeval now;
-		struct timeval delta;
-		struct itimerspec spec;
-
-		spec.it_interval.tv_sec  = 0;
-		spec.it_interval.tv_nsec = 0;
-
-		gettimeofday(&now, 0);
-		calculateNextTimeout(&data->ti, now, delta);
-		TIMEVAL_TO_TIMESPEC(&delta, &spec.it_value);
-		Q_ASSERT(!(0 == spec.it_value.tv_sec && 0 == spec.it_value.tv_nsec));
-
-		if (-1 == timerfd_settime(data->ti.fd, 0, &spec, 0)) {
-			qErrnoWarning("%s: timerfd_settime() failed", Q_FUNC_INFO);
-		}
+	if (!info.is_in_callback) {
+		info.is_in_callback = true;
+		QTimerEvent event(info.timerId);
+		QCoreApplication::sendEvent(info.object, &event);
+		info.is_in_callback = false;
+	} else {
+		// Previously called timer slot is blocked, but another event loop
+		// brought us here - discard the event to avoid a recursive slot call.
 	}
 }
 
@@ -436,20 +418,16 @@ bool EventDispatcherEPollPrivate::disableTimers(bool disable)
 	else {
 		spec.it_value.tv_sec  = 0;
 		spec.it_value.tv_nsec = 0;
+		spec.it_interval.tv_sec  = 0;
+		spec.it_interval.tv_nsec = 0;
 	}
-
-	spec.it_interval.tv_sec  = 0;
-	spec.it_interval.tv_nsec = 0;
 
 	TimerHash::Iterator it = this->m_timers.begin();
 	while (it != this->m_timers.end()) {
 		HandleData* data = it.value();
 
 		if (!disable) {
-			struct timeval delta;
-			calculateNextTimeout(&data->ti, now, delta);
-			TIMEVAL_TO_TIMESPEC(&delta, &spec.it_value);
-			Q_ASSERT(!(0 == spec.it_value.tv_sec && 0 == spec.it_value.tv_nsec));
+			calculateNextTimeout(&data->ti, now, spec);
 		}
 
 		if (Q_UNLIKELY(-1 == timerfd_settime(data->ti.fd, 0, &spec, 0))) {
