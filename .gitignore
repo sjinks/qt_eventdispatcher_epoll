@@ -7,3 +7,4 @@ moc_*.cpp
 Makefile
 Makefile.*
 /tests/tst_*
+.qmake.stash
