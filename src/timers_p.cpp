@@ -175,10 +175,6 @@ namespace {
 		}
 
 		timersub(&when, &now, &delta);
-
-		if (delta.tv_sec == 0 && delta.tv_usec == 0) {
-			delta.tv_usec = 1;
-		}
 	}
 }
 
@@ -217,7 +213,9 @@ void EventDispatcherEPollPrivate::registerTimer(int timerId, int interval, Qt::T
 		spec.it_interval.tv_nsec = 0;
 
 		TIMEVAL_TO_TIMESPEC(&delta, &spec.it_value);
-		Q_ASSERT(!(0 == spec.it_value.tv_sec && 0 == spec.it_value.tv_nsec));
+		if (0 == spec.it_value.tv_sec && 0 == spec.it_value.tv_nsec) {
+			spec.it_value.tv_nsec = 500;
+		}
 
 		if (Q_UNLIKELY(-1 == timerfd_settime(fd, 0, &spec, 0))) {
 			qErrnoWarning("%s: timerfd_settime() failed", Q_FUNC_INFO);
@@ -415,6 +413,9 @@ void EventDispatcherEPollPrivate::timer_callback(const TimerInfo& info)
 		gettimeofday(&now, 0);
 		calculateNextTimeout(&data->ti, now, delta);
 		TIMEVAL_TO_TIMESPEC(&delta, &spec.it_value);
+		if (0 == spec.it_value.tv_sec && 0 == spec.it_value.tv_nsec) {
+			spec.it_value.tv_nsec = 500;
+		}
 
 		if (-1 == timerfd_settime(data->ti.fd, 0, &spec, 0)) {
 			qErrnoWarning("%s: timerfd_settime() failed", Q_FUNC_INFO);
