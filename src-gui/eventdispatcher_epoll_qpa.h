@@ -11,7 +11,7 @@ class EventDispatcherEPollQPA : public EventDispatcherEPoll {
 	Q_OBJECT
 public:
 	explicit EventDispatcherEPollQPA(QObject* parent = 0);
-	virtual ~EventDispatcherEPollQPA(void);
+	virtual ~EventDispatcherEPollQPA(void) Q_DECL_OVERRIDE;
 
 	bool processEvents(QEventLoop::ProcessEventsFlags flags) Q_DECL_OVERRIDE;
 	bool hasPendingEvents(void) Q_DECL_OVERRIDE;
