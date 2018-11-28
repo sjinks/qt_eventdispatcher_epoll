@@ -4,7 +4,6 @@
 #include <QtCore/QAbstractEventDispatcher>
 
 class EventDispatcherEPollPrivate;
-class EventDispatcherLibEventConfig;
 
 class EventDispatcherEPoll : public QAbstractEventDispatcher {
 	Q_OBJECT
